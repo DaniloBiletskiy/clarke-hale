@@ -84,7 +84,7 @@ export function initStory(root: HTMLElement, onReady: (g: GotoFn) => void): () =
             trigger: root,
             start: 'top top',
             end: 'bottom bottom',
-            scrub: mobile ? 0.42 : 0.62,
+            scrub: 0.6,
             invalidateOnRefresh: true,
           },
           onUpdate: () => {
