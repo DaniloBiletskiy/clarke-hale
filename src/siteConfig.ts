@@ -125,6 +125,38 @@ export const siteConfig = {
     evidenceB: 'images/evidence-detail.jpg',
   },
 
+  consultant: {
+    tab: 'AI counsel',
+    status: 'On duty — 24/7',
+    title: 'Consultation memo',
+    ref: 'REF CH-AI/01',
+    greeting:
+      'Good day. I am the desk assistant of Clarke & Hale. Ask about our practice, process or results — or open a file with the firm.',
+    menuLabel: 'Memo index',
+    menu: [
+      { id: 'practices', label: 'Practice areas' },
+      { id: 'process', label: 'How we work' },
+      { id: 'results', label: 'Results' },
+      { id: 'fees', label: 'Fees' },
+      { id: 'book', label: 'Book consultation' },
+    ],
+    answers: {
+      practices:
+        'Four files, one standard: Corporate & M&A, Dispute Resolution, Real Estate and Private Clients. Which matter is yours?',
+      process:
+        'Assess → Build strategy → Act → Resolve. Every matter is mapped, costed and documented from day one.',
+      results:
+        '15+ years of practice, €120M+ in transactions advised, 94% of matters resolved before trial, 24h critical response.',
+      fees:
+        'No hourly black box: after the first consultation you receive a fixed-scope quote, staged and capped in writing.',
+      book: 'The fastest route is the consultation form — one business day to a named partner.',
+      hello: 'Good day. How can I help — practice areas, process, results, or booking?',
+      fallback:
+        'That is beyond my memo. Leave a request and counsel will answer within one business day.',
+    },
+    inputPlaceholder: 'Write your question…',
+  },
+
   footer: {
     note: '© 2026 Clarke & Hale LLP. Demonstration website.',
   },

@@ -2,6 +2,7 @@ import { useCallback, useRef } from 'react';
 import { Header } from './components/Header';
 import { Stage } from './components/Stage';
 import { Verdict } from './components/Verdict';
+import { Consultant } from './components/Consultant';
 import type { GotoFn } from './animation';
 import type { NavTarget } from './siteConfig';
 
@@ -23,6 +24,7 @@ export default function App() {
         <Stage onReady={handleReady} onNavigate={handleNavigate} />
         <Verdict />
       </main>
+      <Consultant />
     </div>
   );
 }
