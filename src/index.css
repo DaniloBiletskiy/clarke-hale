@@ -209,7 +209,7 @@ a {
 /* ---------- story / stage ---------- */
 
 .story {
-  height: 1500vh;
+  height: 1390vh;
   position: relative;
 }
 
@@ -984,7 +984,7 @@ a {
 
 @media (max-width: 860px) {
   .story {
-    height: 1400vh;
+    height: 1300vh;
   }
 
   .brand-tag {
