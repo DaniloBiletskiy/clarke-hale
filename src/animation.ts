@@ -7,7 +7,7 @@ gsap.registerPlugin(ScrollTrigger);
 export type GotoFn = (t: NavTarget) => void;
 
 // Master timeline is 100 arbitrary units long, scrubbed across .story.
-const T = {
+const T_DESKTOP = {
   openEnd: 8,
   prStart: 12,
   prLen: 7,
@@ -21,11 +21,20 @@ const T = {
   end: 100,
 };
 
-const GOTO_TIMES: Record<Exclude<NavTarget, 'verdict'>, number> = {
-  opening: 0,
-  practices: T.prStart + 3,
-  strategy: T.stStart + 3,
-  evidence: T.evStart + 3,
+// Mobile redistribution: every state gets more scroll distance so a single
+// swipe never jumps across several meaningful states.
+const T_MOBILE = {
+  openEnd: 9,
+  prStart: 13,
+  prLen: 8,
+  prEnd: 45,
+  stStart: 50,
+  stLen: 6.5,
+  stEnd: 76,
+  evStart: 80,
+  evLen: 4.5,
+  evEnd: 95,
+  end: 100,
 };
 
 export function initStory(root: HTMLElement, onReady: (g: GotoFn) => void): () => void {
@@ -40,6 +49,13 @@ export function initStory(root: HTMLElement, onReady: (g: GotoFn) => void): () =
       },
       (c) => {
         const { mobile, reduce } = c.conditions as { mobile: boolean; reduce: boolean };
+        const T = mobile ? T_MOBILE : T_DESKTOP;
+        const gotoTimes: Record<Exclude<NavTarget, 'verdict'>, number> = {
+          opening: 0,
+          practices: T.prStart + 3,
+          strategy: T.stStart + 3,
+          evidence: T.evStart + 3,
+        };
 
         // --- Reduced motion: fully static, stacked layout, no timelines. ---
         if (reduce) {
@@ -79,12 +95,12 @@ export function initStory(root: HTMLElement, onReady: (g: GotoFn) => void): () =
         const statShown = statTargets.map(() => -1);
 
         const tl = gsap.timeline({
-          defaults: { ease: 'power2.inOut' },
+          defaults: { ease: mobile ? 'none' : 'power2.inOut' },
           scrollTrigger: {
             trigger: root,
             start: 'top top',
             end: 'bottom bottom',
-            scrub: mobile ? 0.9 : 0.88,
+            scrub: mobile ? 1.05 : 0.88,
             invalidateOnRefresh: true,
           },
           onUpdate: () => {
@@ -114,7 +130,23 @@ export function initStory(root: HTMLElement, onReady: (g: GotoFn) => void): () =
         });
 
         // ---------- initial states (applied immediately) ----------
-        gsap.set('.casefile', { xPercent: -50, yPercent: -50, x: mobile ? 0 : iw() * 0.17, y: mobile ? ih() * 0.2 : 0, scale: 1 });
+        // On mobile the case file starts fully BELOW the hero CTA: measure the
+        // CTA's layout bottom and derive the y offset so the initial hero is a
+        // clean stack — text → CTA → case file — with no overlap.
+        const heroCaseY = () => {
+          const actions = q('.op-actions')[0] as HTMLElement | undefined;
+          const cf = q('.casefile')[0] as HTMLElement | undefined;
+          if (!actions || !cf) return ih() * 0.24;
+          let layoutTop = 0;
+          let el: HTMLElement | null = actions;
+          while (el && el !== root) {
+            layoutTop += el.offsetTop;
+            el = el.offsetParent as HTMLElement | null;
+          }
+          const gap = Math.max(32, ih() * 0.045);
+          return layoutTop + actions.offsetHeight + gap - ih() * 0.51 + cf.offsetHeight / 2;
+        };
+        gsap.set('.casefile', { xPercent: -50, yPercent: -50, x: mobile ? 0 : iw() * 0.17, y: mobile ? heroCaseY() : 0, scale: 1 });
         gsap.set('.pr-doc', { xPercent: -50, yPercent: -50, x: AX(), y: AY(), scale: AS * 0.9, opacity: 0, rotate: 4 });
         gsap.set('.st-node', { xPercent: -50, yPercent: -50, opacity: 0, scale: 0.6 });
         gsap.set('.ev-item[data-i="0"]', { xPercent: -50, yPercent: -50, x: 0, y: 0, scale: 1, opacity: 1 });
@@ -218,16 +250,25 @@ export function initStory(root: HTMLElement, onReady: (g: GotoFn) => void): () =
         tl.to('.casefile', { y: () => ih() * 0.6, opacity: 0, duration: 3, ease: 'power2.in' }, T.evEnd + 3.5);
 
         // ---------- navigation ----------
+        // Re-anchor the mobile hero case file below the CTA after resizes,
+        // but only while the story has not started yet.
+        const onRefresh = () => {
+          if (mobile && tl.progress() < 0.001) gsap.set('.casefile', { y: heroCaseY() });
+        };
+        ScrollTrigger.addEventListener('refresh', onRefresh);
+
         const goto: GotoFn = (target) => {
           if (target === 'verdict') {
             document.querySelector('.verdict')?.scrollIntoView({ behavior: 'smooth' });
             return;
           }
-          const time = GOTO_TIMES[target];
+          const time = gotoTimes[target];
           const scrollable = root.offsetHeight - window.innerHeight;
           window.scrollTo({ top: root.offsetTop + (time / T.end) * scrollable, behavior: 'smooth' });
         };
         onReady(goto);
+
+        return () => ScrollTrigger.removeEventListener('refresh', onRefresh);
       },
     );
   }, root);
